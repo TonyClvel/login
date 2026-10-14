@@ -7,11 +7,15 @@ Abre `index.html` en un navegador. Credenciales de demostración:
 
 Ejecuta las cinco pruebas con `npm test` (Node.js 18 o posterior).
 
+Al instalar las dependencias se activa automáticamente el hook `pre-push`, que
+ejecuta las pruebas antes de permitir un `git push`. Si no usas `npm install`,
+puedes activarlo manualmente con `npm run prepare`.
+
 ## Control de cambios con GitHub Actions y OpenCode
 
 Instala primero la integración oficial de OpenCode en el repositorio con `opencode github install`, o instala la GitHub App **opencode-agent** y su workflow siguiendo su documentación. OpenCode ejecuta sus tareas dentro de Actions y crea una rama y PR; no es correcto validar `github.actor`, porque ese valor puede ser la persona que escribió el comentario `/opencode`.
 
-El workflow `.github/workflows/agent-only.yml` valida en cambio el autor de la PR (`github.event.pull_request.user.login`). Tras la primera PR creada por la app, copia el valor mostrado como autora (normalmente `opencode-agent[bot]`) a la variable de repositorio `OPENCODE_GITHUB_ACTOR`. Cualquier PR de otra identidad falla antes de las pruebas.
+El workflow `.github/workflows/agent-only.yml` valida el autor de la PR (`github.event.pull_request.user.login`). Tras la primera PR creada por la app, copia el valor mostrado como autora (normalmente `opencode-agent[bot]`) a la variable de repositorio `OPENCODE_GITHUB_ACTOR`. Cualquier PR de otra identidad falla antes de las pruebas. Los pushes a `main` ejecutan las pruebas directamente.
 
 Para que el control sea efectivo —una validación YAML no puede distinguir de forma criptográfica cada edición si una persona también puede escribir en la misma rama— configura estas rulesets o protecciones en GitHub:
 

@@ -1,6 +1,8 @@
 name: Validar origen OpenCode
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
     types: [opened, reopened, synchronize]
@@ -8,6 +10,7 @@ on:
 jobs:
   authorize-change:
     name: Solo cambios de OpenCode
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     env:
       # Valor esperado con la GitHub App oficial: opencode-agent[bot].
@@ -32,6 +35,7 @@ jobs:
   tests:
     name: Pruebas del login
     needs: authorize-change
+    if: always() && (github.event_name == 'push' || needs.authorize-change.result == 'success')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
