@@ -3,27 +3,31 @@ name: Validar origen OpenCode
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [main]
+    types: [opened, reopened, synchronize]
 
 jobs:
   authorize-change:
     name: Solo cambios de OpenCode
     runs-on: ubuntu-latest
     env:
-      # Definir esta variable de Actions con el login real del bot de OpenCode.
-      # Si no se define, se espera la cuenta estándar opencode[bot].
-      ALLOWED_ACTOR: ${{ vars.OPENCODE_GITHUB_ACTOR || 'opencode[bot]' }}
-      EVENT_ACTOR: ${{ github.actor }}
+      # Valor esperado con la GitHub App oficial: opencode-agent[bot].
+      # Confírmalo en la primera PR que cree la app y configúralo como variable
+      # de Actions: OPENCODE_GITHUB_ACTOR.
+      ALLOWED_PR_AUTHOR: ${{ vars.OPENCODE_GITHUB_ACTOR }}
+      PR_AUTHOR: ${{ github.event.pull_request.user.login }}
     steps:
-      - name: Rechazar cambios manuales
+      - name: Rechazar una PR que no sea de OpenCode
         shell: bash
         run: |
-          if [ "$EVENT_ACTOR" != "$ALLOWED_ACTOR" ]; then
-            echo "Cambio rechazado: '$EVENT_ACTOR' no es el agente autorizado '$ALLOWED_ACTOR'."
+          if [ -z "$ALLOWED_PR_AUTHOR" ]; then
+            echo "Falta configurar la variable OPENCODE_GITHUB_ACTOR."
             exit 1
           fi
-          echo "Cambio autorizado desde OpenCode: $EVENT_ACTOR"
+          if [ "$PR_AUTHOR" != "$ALLOWED_PR_AUTHOR" ]; then
+            echo "PR rechazada: '$PR_AUTHOR' no es el bot OpenCode autorizado '$ALLOWED_PR_AUTHOR'."
+            exit 1
+          fi
+          echo "PR autorizada desde OpenCode: $PR_AUTHOR"
 
   tests:
     name: Pruebas del login
