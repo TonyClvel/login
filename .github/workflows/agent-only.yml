@@ -1,0 +1,37 @@
+name: Validar origen OpenCode
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  authorize-change:
+    name: Solo cambios de OpenCode
+    runs-on: ubuntu-latest
+    env:
+      # Definir esta variable de Actions con el login real del bot de OpenCode.
+      # Si no se define, se espera la cuenta estándar opencode[bot].
+      ALLOWED_ACTOR: ${{ vars.OPENCODE_GITHUB_ACTOR || 'opencode[bot]' }}
+      EVENT_ACTOR: ${{ github.actor }}
+    steps:
+      - name: Rechazar cambios manuales
+        shell: bash
+        run: |
+          if [ "$EVENT_ACTOR" != "$ALLOWED_ACTOR" ]; then
+            echo "Cambio rechazado: '$EVENT_ACTOR' no es el agente autorizado '$ALLOWED_ACTOR'."
+            exit 1
+          fi
+          echo "Cambio autorizado desde OpenCode: $EVENT_ACTOR"
+
+  tests:
+    name: Pruebas del login
+    needs: authorize-change
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
